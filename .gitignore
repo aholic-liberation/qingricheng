@@ -1,0 +1,23 @@
+# Gradle
+.gradle/
+build/
+app/build/
+.kotlin/
+
+# Local config (SDK path, machine-specific)
+local.properties
+
+# Signing material — never commit
+keystore/
+*.jks
+*.keystore
+apk/
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
