@@ -18,10 +18,14 @@ val CreamDeep = Color(0xFFEFE9DD)
 val Paper = Color(0xFFFFFDF7)
 val Ink = Color(0xFF20242A)
 val Muted = Color(0xFF667085)
+// Signal: the only high-salience hue. Reserved for the primary action (send)
+// and "now" markers. Everything else stays in the calm paper/ink range.
 val Accent = Color(0xFF1D4ED8)
 val AccentSoft = Color(0xFFE6EDFB)
+// Low-salience informational colors.
 val Sage = Color(0xFF3F6B5A)
-val Sky = Color(0xFF2563EB)
+val Remote = Color(0xFF5B6B8C)
+val RemoteSoft = Color(0xFFE7EAF0)
 val Line = Color(0x33A8A297)
 
 val StickyButter = Color(0xFFF3E6A6)
@@ -33,7 +37,7 @@ val StickyRose = Color(0xFFF3D7DF)
 private val colors = lightColorScheme(
     primary = Ink,
     onPrimary = Color.White,
-    primaryContainer = AccentSoft,
+    primaryContainer = CreamDeep,
     onPrimaryContainer = Ink,
     secondary = Accent,
     onSecondary = Color.White,

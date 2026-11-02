@@ -46,14 +46,15 @@ import com.qingricheng.app.data.EventItem
 import com.qingricheng.app.data.TaskItem
 import com.qingricheng.app.domain.TimeUtils
 import com.qingricheng.app.ui.theme.Accent
-import com.qingricheng.app.ui.theme.AccentSoft
+import com.qingricheng.app.ui.theme.CreamDeep
 import com.qingricheng.app.ui.theme.Cream
 import com.qingricheng.app.ui.theme.Ink
 import com.qingricheng.app.ui.theme.Line
 import com.qingricheng.app.ui.theme.Muted
 import com.qingricheng.app.ui.theme.Paper
 import com.qingricheng.app.ui.theme.Sage
-import com.qingricheng.app.ui.theme.Sky
+import com.qingricheng.app.ui.theme.Remote
+import com.qingricheng.app.ui.theme.RemoteSoft
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -120,7 +121,7 @@ fun WeekScreen(
             Text(if (state.caldavConfigured) "CalDAV 已连接" else "CalDAV 未连接", fontSize = 11.sp, color = Muted)
             if (!state.caldavConfigured) {
                 TextButton(onClick = onOpenSettings, contentPadding = PaddingValues(horizontal = 8.dp)) {
-                    Text("去设置", fontSize = 11.sp, color = Accent)
+                    Text("去设置", fontSize = 11.sp, color = Ink, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
                 }
             }
             Spacer(Modifier.weight(1f))
@@ -226,7 +227,7 @@ private fun EventDetailDialog(
                 Text(
                     TimeUtils.prettyDate(event.date) + if (timeText.isNotBlank()) " · $timeText" else "",
                     fontSize = 12.5.sp,
-                    color = Accent
+                    color = Ink
                 )
                 if (event.location.isNotBlank()) {
                     Spacer(Modifier.height(8.dp))
@@ -244,7 +245,7 @@ private fun EventDetailDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onEdit) { Text("修改", fontSize = 13.sp, color = Accent) }
+            TextButton(onClick = onEdit) { Text("修改", fontSize = 13.sp, color = Ink) }
         },
         dismissButton = {
             TextButton(onClick = onDelete) { Text("删除", fontSize = 13.sp, color = Color(0xFFB3261E)) }
@@ -275,14 +276,14 @@ private fun WeekHeader(
                     Text(
                         weekdayShort(day),
                         fontSize = 11.sp,
-                        color = if (day.dayOfWeek.value >= 6) Sky else Muted
+                        color = if (day.dayOfWeek.value >= 6) Muted else Muted
                     )
                     Box(
                         Modifier
                             .padding(top = 2.dp)
                             .size(28.dp)
                             .clip(RoundedCornerShape(9.dp))
-                            .background(if (isSelected) Accent else Color.Transparent)
+                            .background(if (isSelected) Ink else Color.Transparent)
                             .then(if (isToday && !isSelected) Modifier.border(1.dp, Accent, RoundedCornerShape(9.dp)) else Modifier),
                         contentAlignment = Alignment.Center
                     ) {
@@ -292,8 +293,8 @@ private fun WeekHeader(
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                             color = when {
                                 isSelected -> Color.White
-                                isToday -> Accent
-                                day.dayOfWeek.value >= 6 -> Sky
+                                isToday -> Ink
+                                day.dayOfWeek.value >= 6 -> Muted
                                 else -> Ink
                             }
                         )
@@ -302,13 +303,13 @@ private fun WeekHeader(
                         Text(
                             event.title,
                             fontSize = 10.sp,
-                            color = Accent,
+                            color = Ink,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier
                                 .padding(top = 2.dp)
                                 .clip(RoundedCornerShape(4.dp))
-                                .background(AccentSoft)
+                                .background(CreamDeep)
                                 .padding(horizontal = 3.dp, vertical = 1.dp)
                         )
                     }
@@ -349,7 +350,7 @@ private fun RowScope.DayColumn(
             .weight(1f)
             .height(totalHeight)
             .padding(horizontal = 1.dp)
-            .background(if (day == LocalDate.now()) Color(0x081A73E8) else Color.Transparent)
+            .background(if (day == LocalDate.now()) Ink.copy(alpha = 0.04f) else Color.Transparent)
             .border(0.5.dp, Line.copy(alpha = 0.25f))
     ) {
         Column(Modifier.fillMaxSize()) {
@@ -384,8 +385,8 @@ private fun RowScope.DayColumn(
                     .height(height.dp)
                     .padding(horizontal = 1.5.dp)
                     .clip(RoundedCornerShape(7.dp))
-                    .background(if (event.local) Color(0xFFE6EFE8) else Color(0xFFDCE8FA))
-                    .border(0.7.dp, if (event.local) Sage.copy(alpha = 0.35f) else Accent.copy(alpha = 0.3f), RoundedCornerShape(7.dp))
+                    .background(if (event.local) Color(0xFFE6EFE8) else RemoteSoft)
+                    .border(0.7.dp, if (event.local) Sage.copy(alpha = 0.35f) else Remote.copy(alpha = 0.35f), RoundedCornerShape(7.dp))
                     .clickable { onEventClick(event) }
                     .padding(horizontal = 4.dp, vertical = 3.dp)
             ) {
@@ -393,7 +394,7 @@ private fun RowScope.DayColumn(
                     (if (event.start.isBlank()) "" else event.start + " ") + event.title,
                     fontSize = 11.sp,
                     lineHeight = 12.sp,
-                    color = if (event.local) Sage else Accent,
+                    color = if (event.local) Sage else Remote,
                     fontWeight = FontWeight.Medium,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis

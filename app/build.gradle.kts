@@ -13,8 +13,8 @@ android {
         applicationId = "com.qingricheng.app"
         minSdk = 30
         targetSdk = 37
-        versionCode = 12
-        versionName = "0.5.1"
+        versionCode = 13
+        versionName = "0.6.0"
     }
 
     buildTypes {
@@ -53,6 +53,7 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation("com.squareup.okhttp3:okhttp:5.5.1")
     implementation("org.jsoup:jsoup:1.18.3")
+    implementation("io.github.kyant0:backdrop:1.0.2")
     implementation(files("libs/pdfbox-android-2.0.27.0.aar"))
     implementation(files("libs/bcprov-jdk15to18-1.72.jar"))
     implementation(files("libs/bcpkix-jdk15to18-1.72.jar"))

@@ -54,7 +54,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qingricheng.app.ui.theme.Accent
-import com.qingricheng.app.ui.theme.AccentSoft
+import com.qingricheng.app.ui.theme.CreamDeep
 import com.qingricheng.app.ui.theme.Cream
 import com.qingricheng.app.ui.theme.Ink
 import com.qingricheng.app.ui.theme.Line
@@ -165,7 +165,7 @@ fun SettingsScreen(
                             if (primary) {
                                 Spacer(Modifier.width(6.dp))
                                 Box(
-                                    Modifier.background(Accent, RoundedCornerShape(4.dp)).padding(horizontal = 4.dp, vertical = 1.dp),
+                                    Modifier.background(Ink, RoundedCornerShape(4.dp)).padding(horizontal = 4.dp, vertical = 1.dp),
                                     contentAlignment = Alignment.Center
                                 ) { Text("主", fontSize = 10.5.sp, color = Color.White, lineHeight = 11.sp) }
                             }
@@ -276,7 +276,7 @@ fun SettingsScreen(
                 },
                 enabled = calUser.isNotBlank(),
                 contentPadding = PaddingValues(horizontal = 0.dp)
-            ) { Text("钉钉账号补全地址", fontSize = 11.sp, color = Accent) }
+            ) { Text("钉钉账号补全地址", fontSize = 11.sp, color = Ink, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline) }
             Spacer(Modifier.height(2.dp))
             OutlinedTextField(value = calUser, onValueChange = { calUser = it }, label = { Text("账号") }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(6.dp))
@@ -365,7 +365,7 @@ private fun ProfileSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text(item.label, fontSize = 11.sp, color = Accent, fontWeight = FontWeight.Medium)
+                    Text(item.label, fontSize = 11.sp, color = Muted, fontWeight = FontWeight.Medium)
                     Text(item.value, fontSize = 12.5.sp, color = Ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
                 TextButton(
@@ -450,7 +450,7 @@ private fun Section(title: String, content: @Composable () -> Unit) {
 @Composable
 private fun BoxAvatar(avatar: String) {
     androidx.compose.foundation.layout.Box(
-        Modifier.size(34.dp).background(AccentSoft, CircleShape),
+        Modifier.size(34.dp).background(CreamDeep, CircleShape),
         contentAlignment = Alignment.Center
     ) { Text(avatar, fontSize = 17.sp) }
 }

@@ -46,14 +46,13 @@ import com.qingricheng.app.data.EventItem
 import com.qingricheng.app.data.TaskItem
 import com.qingricheng.app.domain.TimeUtils
 import com.qingricheng.app.ui.theme.Accent
-import com.qingricheng.app.ui.theme.AccentSoft
 import com.qingricheng.app.ui.theme.Cream
 import com.qingricheng.app.ui.theme.Ink
 import com.qingricheng.app.ui.theme.Line
 import com.qingricheng.app.ui.theme.Muted
 import com.qingricheng.app.ui.theme.Paper
 import com.qingricheng.app.ui.theme.Sage
-import com.qingricheng.app.ui.theme.Sky
+import com.qingricheng.app.ui.theme.Remote
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -121,7 +120,7 @@ fun ScheduleScreen(
             )
             if (!state.caldavConfigured) {
                 TextButton(onClick = onOpenSettings, contentPadding = PaddingValues(horizontal = 8.dp)) {
-                    Text("去设置", fontSize = 11.sp, color = Accent)
+                    Text("去设置", fontSize = 11.sp, color = Ink, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
                 }
             }
             Spacer(Modifier.weight(1f))
@@ -270,7 +269,7 @@ private fun MonthGrid(
                             .aspectRatio(1f)
                             .padding(1.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(if (isSelected) Accent else Color.Transparent)
+                            .background(if (isSelected) Ink else Color.Transparent)
                             .then(
                                 if (isToday && !isSelected) Modifier.border(1.2.dp, Accent, RoundedCornerShape(10.dp))
                                 else Modifier
@@ -286,13 +285,13 @@ private fun MonthGrid(
                                 color = when {
                                     isSelected -> Color.White
                                     outside -> Muted.copy(alpha = 0.35f)
-                                    isToday -> Accent
-                                    date.dayOfWeek.value >= 6 -> Sky
+                                    isToday -> Ink
+                                    date.dayOfWeek.value >= 6 -> Muted
                                     else -> Ink
                                 }
                             )
                             Row(Modifier.height(5.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                                if (hasEvent) Box(Modifier.size(4.dp).background(if (isSelected) Color.White else Sky, CircleShape))
+                                if (hasEvent) Box(Modifier.size(4.dp).background(if (isSelected) Color.White else Remote, CircleShape))
                                 if (hasTask) Box(Modifier.size(4.dp).background(if (isSelected) Color.White else Sage, CircleShape))
                             }
                         }
@@ -318,7 +317,7 @@ private fun EventRow(event: EventItem, onDelete: () -> Unit) {
             Modifier
                 .width(4.dp)
                 .height(40.dp)
-                .background(if (event.local) Sage else Accent, RoundedCornerShape(4.dp))
+                .background(if (event.local) Sage else Remote, RoundedCornerShape(4.dp))
         )
         Spacer(Modifier.width(9.dp))
         Text(

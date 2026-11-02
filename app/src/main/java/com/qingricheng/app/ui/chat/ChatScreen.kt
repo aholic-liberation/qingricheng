@@ -20,6 +20,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,6 +37,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,12 +64,13 @@ import com.qingricheng.app.data.ChatMessage
 import com.qingricheng.app.data.MessageMeta
 import com.qingricheng.app.data.SearchResult
 import com.qingricheng.app.ui.theme.Accent
-import com.qingricheng.app.ui.theme.AccentSoft
+import com.qingricheng.app.ui.theme.CreamDeep
 import com.qingricheng.app.ui.theme.Ink
 import com.qingricheng.app.ui.theme.Line
 import com.qingricheng.app.ui.theme.Muted
 import com.qingricheng.app.ui.theme.Paper
 import com.qingricheng.app.ui.theme.Cream
+import com.qingricheng.app.ui.glass.GlassSpec
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -74,26 +79,8 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun ChatScreen(
-    state: ChatUiState,
-    onSend: (String) -> Unit,
-    onStop: () -> Unit,
-    onClear: () -> Unit,
-    onOpenPersonas: () -> Unit,
-    onDismissError: () -> Unit,
-    onAttach: (Uri, String) -> Unit,
-    onRemoveAttachment: (String) -> Unit,
-    onDismissAttachmentError: () -> Unit
-) {
-    var draft by rememberSaveable { mutableStateOf("") }
-    var confirmClear by remember { mutableStateOf(false) }
-    var attachMenu by remember { mutableStateOf(false) }
-    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri != null) onAttach(uri, "image")
-    }
-    val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) onAttach(uri, "file")
-    }
+fun ChatScreen(state: ChatUiState) {
+    val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val primary = state.personas.firstOrNull()
     val listState = rememberLazyListState()
 
@@ -102,142 +89,36 @@ fun ChatScreen(
         if (count > 0) listState.animateScrollToItem(count - 1)
     }
 
-    Column(Modifier.fillMaxSize()) {
-        ChatHeader(
-            title = primary?.name ?: "轻日程",
-            subtitle = if (state.personas.size > 1) state.personas.joinToString("、") { it.name }
-            else primary?.tagline.orEmpty().ifBlank { "陪你聊天，也帮你安排生活" },
-            avatar = primary?.avatar ?: "🌙",
-            onOpenPersonas = onOpenPersonas,
-            onClear = { confirmClear = true }
-        )
-        state.error?.let { error ->
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(error, color = MaterialError, fontSize = 12.sp, modifier = Modifier.weight(1f))
-                TextButton(onClick = onDismissError) { Text("知道了") }
+    LazyColumn(
+        state = listState,
+        modifier = Modifier.fillMaxSize().padding(top = GlassSpec.ContentTopPadding),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+            start = 16.dp,
+            end = 16.dp,
+            top = 10.dp,
+            bottom = navBottom + 180.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(state.messages.size) { index ->
+            val message = state.messages[index]
+            MessageBubble(message = message, isUser = message.role == "user", avatar = primary?.avatar ?: "🌙")
+        }
+        if (state.streamingText.isNotBlank() || state.sending) {
+            item {
+                StreamingBubble(
+                    text = state.streamingText,
+                    status = state.status,
+                    toolNotes = state.toolNotes,
+                    sources = state.sources,
+                    avatar = primary?.avatar ?: "🌙"
+                )
             }
         }
-        state.attachmentError?.let { error ->
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(error, color = MaterialError, fontSize = 12.sp, modifier = Modifier.weight(1f))
-                TextButton(onClick = onDismissAttachmentError) { Text("知道了") }
-            }
-        }
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(state.messages.size) { index ->
-                val message = state.messages[index]
-                MessageBubble(message = message, isUser = message.role == "user", avatar = primary?.avatar ?: "🌙")
-            }
-            if (state.streamingText.isNotBlank() || state.sending) {
-                item {
-                    StreamingBubble(
-                        text = state.streamingText,
-                        status = state.status,
-                        toolNotes = state.toolNotes,
-                        sources = state.sources,
-                        avatar = primary?.avatar ?: "🌙"
-                    )
-                }
-            }
-        }
-        Composer(
-            draft = draft,
-            onDraftChange = { draft = it },
-            sending = state.sending,
-            attachments = state.pendingAttachments,
-            processingAttachment = state.processingAttachment,
-            onAttachClick = { attachMenu = true },
-            onRemoveAttachment = onRemoveAttachment,
-            onSend = {
-                if (draft.isNotBlank() || state.pendingAttachments.isNotEmpty()) {
-                    onSend(draft)
-                    draft = ""
-                }
-            },
-            onStop = onStop
-        )
-    }
-
-    if (confirmClear) {
-        AlertDialog(
-            onDismissRequest = { confirmClear = false },
-            title = { Text("清空这段对话？") },
-            text = { Text("聊天记录会删除，人设卡和日程/便签不受影响。") },
-            confirmButton = {
-                TextButton(onClick = { confirmClear = false; onClear() }) { Text("清空") }
-            },
-            dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("取消") } }
-        )
-    }
-    if (attachMenu) {
-        AlertDialog(
-            onDismissRequest = { attachMenu = false },
-            title = { Text("添加附件") },
-            text = { Text("图片支持 jpg/png/webp；文档支持 pdf、docx、md、txt、csv、json、html。旧版 .doc 请另存为 docx 或 pdf。") },
-            confirmButton = {
-                TextButton(onClick = { attachMenu = false; imagePicker.launch("image/*") }) { Text("图片") }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    attachMenu = false
-                    filePicker.launch(
-                        arrayOf(
-                            "application/pdf",
-                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            "text/markdown", "text/plain", "text/csv", "application/json", "text/html",
-                            "application/octet-stream"
-                        )
-                    )
-                }) { Text("文档") }
-            }
-        )
     }
 }
 
 private val MaterialError = Color(0xFFB3261E)
-
-@Composable
-private fun ChatHeader(
-    title: String,
-    subtitle: String,
-    avatar: String,
-    onOpenPersonas: () -> Unit,
-    onClear: () -> Unit
-) {
-    Row(
-        Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp, top = 14.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            Modifier.size(40.dp).background(AccentSoft, CircleShape),
-            contentAlignment = Alignment.Center
-        ) { Text(avatar, fontSize = 21.sp) }
-        Spacer(Modifier.width(10.dp))
-        Column(Modifier.weight(1f)) {
-            Text(title, style = androidx.compose.material3.MaterialTheme.typography.titleMedium, color = Ink)
-            Text(
-                subtitle,
-                fontSize = 11.5.sp,
-                color = Muted,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-        TextButton(onClick = onOpenPersonas) { Text("人设", fontSize = 12.sp) }
-        TextButton(onClick = onClear) { Text("新对话", fontSize = 12.sp, color = Muted) }
-    }
-}
 
 @Composable
 private fun MessageBubble(message: ChatMessage, isUser: Boolean, avatar: String) {
@@ -248,7 +129,7 @@ private fun MessageBubble(message: ChatMessage, isUser: Boolean, avatar: String)
     ) {
         if (!isUser) {
             Box(
-                Modifier.size(30.dp).background(AccentSoft, CircleShape),
+                Modifier.size(30.dp).background(CreamDeep, CircleShape),
                 contentAlignment = Alignment.Center
             ) { Text(avatar, fontSize = 16.sp) }
             Spacer(Modifier.width(8.dp))
@@ -270,7 +151,7 @@ private fun MessageBubble(message: ChatMessage, isUser: Boolean, avatar: String)
                 }
                 Box(
                     Modifier
-                        .background(if (isUser) AccentSoft else Paper, bubbleShape)
+                        .background(if (isUser) CreamDeep else Paper, bubbleShape)
                         .border(0.7.dp, if (isUser) Color.Transparent else Line, bubbleShape)
                         .padding(horizontal = 14.dp, vertical = 11.dp)
                 ) {
@@ -321,7 +202,7 @@ private fun StreamingBubble(
 ) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Box(
-            Modifier.size(30.dp).background(AccentSoft, CircleShape),
+            Modifier.size(30.dp).background(CreamDeep, CircleShape),
             contentAlignment = Alignment.Center
         ) { Text(avatar, fontSize = 16.sp) }
         Spacer(Modifier.width(8.dp))
@@ -368,7 +249,7 @@ private fun SourceCards(sources: List<SearchResult>) {
                     runCatching { uriHandler.openUri(source.url) }
                 }.padding(2.dp)
             ) {
-                Text(source.title.ifBlank { source.url }, fontSize = 12.5.sp, color = Accent, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(source.title.ifBlank { source.url }, fontSize = 12.5.sp, color = Ink, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(source.url, fontSize = 11.sp, color = Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
@@ -402,9 +283,9 @@ private fun AttachmentChip(attachment: Attachment, onRemove: () -> Unit) {
             AttachmentThumb(attachment, Modifier.size(38.dp))
         } else {
             Box(
-                Modifier.size(32.dp).background(AccentSoft, RoundedCornerShape(7.dp)),
+                Modifier.size(32.dp).background(CreamDeep, RoundedCornerShape(7.dp)),
                 contentAlignment = Alignment.Center
-            ) { Text(fileBadge(attachment.name), fontSize = 10.5.sp, color = Accent, fontWeight = FontWeight.SemiBold) }
+            ) { Text(fileBadge(attachment.name), fontSize = 10.5.sp, color = Ink, fontWeight = FontWeight.SemiBold) }
         }
         Spacer(Modifier.width(6.dp))
         Column(Modifier.widthIn(max = 130.dp)) {
@@ -424,9 +305,9 @@ private fun FileChip(attachment: Attachment) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            Modifier.size(32.dp).background(AccentSoft, RoundedCornerShape(7.dp)),
+            Modifier.size(32.dp).background(CreamDeep, RoundedCornerShape(7.dp)),
             contentAlignment = Alignment.Center
-        ) { Text(fileBadge(attachment.name), fontSize = 10.5.sp, color = Accent, fontWeight = FontWeight.SemiBold) }
+        ) { Text(fileBadge(attachment.name), fontSize = 10.5.sp, color = Ink, fontWeight = FontWeight.SemiBold) }
         Spacer(Modifier.width(8.dp))
         Column(Modifier.weight(1f)) {
             Text(attachment.name, fontSize = 12.5.sp, color = Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -452,7 +333,7 @@ private fun AttachmentThumb(attachment: Attachment, modifier: Modifier) {
         )
     } else {
         Box(
-            modifier.background(AccentSoft, RoundedCornerShape(10.dp)),
+            modifier.background(CreamDeep, RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center
         ) { Text("图片", fontSize = 11.sp, color = Muted) }
     }
@@ -468,7 +349,7 @@ private fun formatSize(bytes: Long): String = when {
 }
 
 @Composable
-private fun Composer(
+fun Composer(
     draft: String,
     onDraftChange: (String) -> Unit,
     sending: Boolean,
@@ -477,10 +358,21 @@ private fun Composer(
     onAttachClick: () -> Unit,
     onRemoveAttachment: (String) -> Unit,
     onSend: () -> Unit,
-    onStop: () -> Unit
+    onStop: () -> Unit,
+    modifier: Modifier = Modifier,
+    containerColor: Color = Cream,
+    onGlass: Boolean = false
 ) {
     Column(
-        Modifier.fillMaxWidth().background(Cream).padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp)
+        modifier
+            .fillMaxWidth()
+            .background(containerColor)
+            .padding(
+                start = if (onGlass) 8.dp else 16.dp,
+                end = if (onGlass) 8.dp else 16.dp,
+                top = if (onGlass) 4.dp else 8.dp,
+                bottom = if (onGlass) 2.dp else 12.dp
+            )
     ) {
         if (attachments.isNotEmpty()) {
             Row(
@@ -509,6 +401,12 @@ private fun Composer(
                 minLines = 1,
                 maxLines = 4,
                 shape = RoundedCornerShape(18.dp),
+                colors = if (onGlass) OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Paper.copy(alpha = 0.75f),
+                    unfocusedContainerColor = Paper.copy(alpha = 0.62f),
+                    focusedBorderColor = Color.White.copy(alpha = 0.95f),
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.75f)
+                ) else OutlinedTextFieldDefaults.colors(),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                 keyboardActions = KeyboardActions(onSend = { onSend() })
             )

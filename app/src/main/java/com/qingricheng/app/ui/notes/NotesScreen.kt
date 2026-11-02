@@ -103,7 +103,7 @@ fun NotesScreen(
                     Modifier
                         .size(24.dp)
                         .background(stickyColor(name), CircleShape)
-                        .then(if (name == color) Modifier.border(2.dp, Sage, CircleShape) else Modifier)
+                        .then(if (name == color) Modifier.border(2.dp, Ink, CircleShape) else Modifier)
                         .clickable { color = name }
                 )
             }

@@ -7,7 +7,7 @@
 - **数据本地**：聊天、日程、便签存在本机 SQLite；API Key 和 CalDAV 密码用 Android Keystore AES/GCM 加密
 - **无遥测**：不收集、不上报，只有你配置的模型/日历/搜索端点会收到请求
 
-当前版本：`0.5.1`（versionCode 12，minSdk 30 / targetSdk 37）
+当前版本：`0.6.0`（versionCode 13，minSdk 30 / targetSdk 37）
 
 ## 功能
 
@@ -58,11 +58,20 @@
 
 在设置页内维护年级、身份、学校、专业、称呼、城市、习惯等长期资料，可手动增删改，也可由模型在聊天中采集。
 
+### 界面
+
+- 顶部人设栏和底部「输入框 + 标签栏」是一整块 Liquid Glass 面板
+- 使用 [Backdrop](https://github.com/Kyant0/AndroidLiquidGlass) 做真实背景折射、色散、高光、内外阴影
+- 底部胶囊随 tab 弹簧移动，高度为栏高的 0.618
+- 底边 3cm 渐进模糊，ease-in 曲线
+- 配色以暖纸和墨色为底，钴蓝只留给发送按钮和「今天」圆环
+
 ## 技术栈
 
 | 层 | 实现 |
 |---|---|
 | UI | Jetpack Compose + Material 3 |
+| 玻璃 / 折射 | Backdrop 1.0.2（AGSL / RenderEffect） |
 | 数据 | SQLiteOpenHelper |
 | 网络 | OkHttp |
 | HTML 解析 | Jsoup |
@@ -139,6 +148,7 @@ python3 tools/mock_caldav.py  # 端口 19091
 - 旧版 `.doc` 不支持
 - 提醒使用 inexact `setAndAllowWhileIdle`，Doze / 省电模式可能延迟
 - 部分 CalDAV 服务器（如钉钉）不接受对已有资源的 PUT，更新会退化为「新建资源 + 删除旧资源」
+- 玻璃透镜需要 Android 13+；Android 12 只有模糊，Android 11 退化为半透明色块
 - 目前只有单会话，历史会话导入和多会话列表还没做
 
 ## 第三方依赖
@@ -147,6 +157,7 @@ python3 tools/mock_caldav.py  # 端口 19091
 - [Bouncy Castle](https://www.bouncycastle.org/) — MIT
 - [OkHttp](https://square.github.io/okhttp/) — Apache-2.0
 - [Jsoup](https://jsoup.org/) — MIT
+- [Backdrop](https://github.com/Kyant0/AndroidLiquidGlass) — MIT
 - AndroidX / Jetpack Compose — Apache-2.0
 
 各组件的许可证以其自身文件为准。
