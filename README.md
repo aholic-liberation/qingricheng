@@ -7,7 +7,7 @@
 - **数据本地**：聊天、日程、便签存在本机 SQLite；API Key 和 CalDAV 密码用 Android Keystore AES/GCM 加密
 - **无遥测**：不收集、不上报，只有你配置的模型/日历/搜索端点会收到请求
 
-当前版本：`0.6.0`（versionCode 13，minSdk 30 / targetSdk 37）
+当前版本：`0.6.1`（versionCode 14，minSdk 30 / targetSdk 37）
 
 ## 功能
 

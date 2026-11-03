@@ -25,6 +25,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -549,11 +550,15 @@ private fun GlassBottomPanel(
                     ) {
                         TABS.forEachIndexed { index, item ->
                             val active = selected == index
+                            val tabInteraction = remember { MutableInteractionSource() }
                             Box(
                                 Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
-                                    .clickable { onSelect(index) }
+                                    .clickable(
+                                        interactionSource = tabInteraction,
+                                        indication = null
+                                    ) { onSelect(index) }
                                     .semantics { contentDescription = item.label },
                                 contentAlignment = Alignment.Center
                             ) {

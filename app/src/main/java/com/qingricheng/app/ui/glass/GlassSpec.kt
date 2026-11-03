@@ -11,6 +11,8 @@ object GlassSpec {
     val BarCorner: Dp = 30.dp
     val PillRatio: Float = 0.618f
     val ContentTopPadding: Dp = 20.dp
+    /** Scrollable blank area at the top of the chat list (≈3cm). */
+    val ChatTopSpacer: Dp = 113.dp
     val ContentBottomPadding: Dp = 84.dp
     val ProgressiveBand: Dp = 189.dp
     val MaxBlur: Dp = 32.dp

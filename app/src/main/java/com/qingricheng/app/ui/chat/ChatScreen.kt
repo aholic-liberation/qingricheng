@@ -86,7 +86,7 @@ fun ChatScreen(state: ChatUiState) {
 
     LaunchedEffect(state.messages.size, state.streamingText, state.sending) {
         val count = state.messages.size + if (state.streamingText.isNotBlank() || state.sending) 1 else 0
-        if (count > 0) listState.animateScrollToItem(count - 1)
+        if (count > 0) listState.animateScrollToItem(count)
     }
 
     LazyColumn(
@@ -100,6 +100,7 @@ fun ChatScreen(state: ChatUiState) {
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        item { Spacer(Modifier.height(GlassSpec.ChatTopSpacer)) }
         items(state.messages.size) { index ->
             val message = state.messages[index]
             MessageBubble(message = message, isUser = message.role == "user", avatar = primary?.avatar ?: "🌙")
