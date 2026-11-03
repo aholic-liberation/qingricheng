@@ -2,7 +2,6 @@ package com.qingricheng.app.domain
 
 import com.qingricheng.app.data.EventItem
 import com.qingricheng.app.data.SearchResult
-import com.qingricheng.app.data.StickyItem
 import com.qingricheng.app.data.TaskItem
 import com.qingricheng.app.net.ApiToolCall
 import com.qingricheng.app.net.CalDavClient
@@ -102,20 +101,6 @@ class ToolRegistry(private val container: com.qingricheng.app.AppContainer) {
             "id", "done"
         ),
         def(
-            "create_sticky",
-            "新建一张便签。",
-            obj(
-                "text" to str("便签内容"),
-                "color" to str("颜色：butter/peach/sage/sky/rose，默认 butter")
-            ),
-            "text"
-        ),
-        def(
-            "list_stickies",
-            "查看所有便签。",
-            obj()
-        ),
-        def(
             "web_search",
             "联网搜索最新信息。默认使用 Bing 网页搜索（无需 Key）；也可以在设置里改用 Tavily/Serper。",
             obj(
@@ -196,8 +181,6 @@ class ToolRegistry(private val container: com.qingricheng.app.AppContainer) {
                 "create_task" -> createTask(args)
                 "list_tasks" -> listTasks(args)
                 "update_task" -> updateTask(args)
-                "create_sticky" -> createSticky(args)
-                "list_stickies" -> listStickies()
                 "web_search" -> webSearch(args)
                 "fetch_url" -> fetchUrl(args)
                 "remember" -> remember(args)
@@ -478,40 +461,6 @@ class ToolRegistry(private val container: com.qingricheng.app.AppContainer) {
             "update_task",
             JSONObject().put("ok", true).put("id", id).put("done", done).toString(),
             if (done) "已勾掉：${task.title}" else "已标记未完成：${task.title}"
-        )
-    }
-
-    private fun createSticky(args: JSONObject): ToolExecution {
-        val text = args.optString("text").trim()
-        if (text.isEmpty()) return failure("create_sticky", "便签内容是空的")
-        val color = args.optString("color").trim().ifEmpty { "butter" }
-        val allowed = setOf("butter", "peach", "sage", "sky", "rose")
-        val now = System.currentTimeMillis()
-        val sticky = StickyItem(
-            id = "sticky_" + UUID.randomUUID().toString().take(12),
-            text = text,
-            color = if (color in allowed) color else "butter",
-            createdAt = now,
-            updatedAt = now
-        )
-        container.notes.upsert(sticky)
-        return ToolExecution(
-            "create_sticky",
-            JSONObject().put("ok", true).put("id", sticky.id).put("text", sticky.text).put("color", sticky.color).toString(),
-            "已记下便签：${sticky.text.take(30)}"
-        )
-    }
-
-    private fun listStickies(): ToolExecution {
-        val stickies = container.notes.list()
-        val arr = JSONArray()
-        stickies.forEach { s ->
-            arr.put(JSONObject().put("id", s.id).put("text", s.text).put("color", s.color).put("done", s.done))
-        }
-        return ToolExecution(
-            "list_stickies",
-            JSONObject().put("ok", true).put("stickies", arr).toString(),
-            if (stickies.isEmpty()) "还没有便签" else "查到 ${stickies.size} 张便签"
         )
     }
 

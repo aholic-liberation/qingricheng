@@ -1,11 +1,11 @@
 # 轻日程 · 代码架构与底层说明
 
-> 适用版本：0.6.1（versionCode 14）
+> 适用版本：0.6.2（versionCode 15）
 > 本文只描述代码本身，不包含部署、签名和任何账号信息。
 
 ## 1. 一句话概括
 
-轻日程是一个**单 Activity、纯 Compose、无 WebView** 的 Android 应用。它把「聊天 / 日程 / 周视图 / 便签 / 设置」五个页面放在同一个 Activity 里，用一份手写的依赖容器串起 SQLite、网络客户端、工具调用和系统提醒。
+轻日程是一个**单 Activity、纯 Compose、无 WebView** 的 Android 应用。它把「聊天 / 日程 / 周视图 / 待办 / 设置」五个页面放在同一个 Activity 里，用一份手写的依赖容器串起 SQLite、网络客户端、工具调用和系统提醒。
 
 没有 Node、没有 proot、没有内嵌 Linux，也没有跨端运行时。APK 里跑的就是 Kotlin 编译出的 DEX。
 
@@ -43,7 +43,6 @@ app/src/main/java/com/qingricheng/app/
 │   ├── Models.kt               PersonaCard / ChatMessage / EventItem / TaskItem / StickyItem ...
 │   ├── ChatRepository.kt       消息读写、欢迎语
 │   ├── ScheduleRepository.kt   日程/待办读写 + 提醒排程
-│   ├── NotesRepository.kt      便签
 │   ├── PersonaRepository.kt    人设卡导入/启用/删除
 │   ├── MemoryRepository.kt     长期记忆
 │   ├── ProfileRepository.kt    「关于我」资料
@@ -54,7 +53,7 @@ app/src/main/java/com/qingricheng/app/
 │   └── MessageMeta.kt          消息附件元数据编解码
 ├── domain/
 │   ├── PersonaPrompt.kt        组装 system prompt
-│   ├── ToolRegistry.kt         20 个工具的定义与分发
+│   ├── ToolRegistry.kt         18 个工具的定义与分发
 │   └── TimeUtils.kt            日期/时间/时区工具
 ├── net/
 │   ├── DeepSeekClient.kt       OpenAI 兼容的流式客户端
@@ -72,8 +71,7 @@ app/src/main/java/com/qingricheng/app/
     ├── AppRoot.kt              五个 tab 的根
     ├── theme/Theme.kt          纸感主题与颜色
     ├── chat/                   ChatScreen + ChatViewModel
-    ├── schedule/               ScheduleScreen / WeekScreen + ScheduleViewModel
-    ├── notes/                  NotesScreen + NotesViewModel
+    ├── schedule/               ScheduleScreen / WeekScreen / TasksScreen + ScheduleViewModel
     └── settings/               SettingsScreen + SettingsViewModel
 ```
 
@@ -105,7 +103,6 @@ class AppContainer(context: Context) {
     val personas = PersonaRepository(...)
     val chat = ChatRepository(db)
     val schedule = ScheduleRepository(db, appContext)
-    val notes = NotesRepository(db)
     val profile = ProfileRepository(db)
     val attachments = AttachmentStore(appContext)
     val memory = MemoryRepository(db)
@@ -132,7 +129,7 @@ val chatVm: ChatViewModel = viewModel(
 ### 5.1 UI 层
 
 - `AppRoot` 持有 `tab: Int`，用 `when (tab)` 在五个页面之间切换。
-- 底部是「输入框 + 五个单字标签」合并成的一整块玻璃面板：聊 / 日 / 周 / 贴 / 设。
+- 底部是「输入框 + 五个单字标签」合并成的一整块玻璃面板：聊 / 日 / 周 / 办 / 设。
 - 键盘弹出时标签行隐藏，只保留输入框；输入区用 `imePadding()` 贴住键盘。
 - 顶部人设栏和底部面板使用 Backdrop 玻璃：`rememberLayerBackdrop` 记录页面，`drawBackdrop` 叠加 `vibrancy()`、`blur()`、`lens()` 和内置高光/阴影。
 - 底部胶囊随 tab 做 spring 移动，高度为栏高的 0.618。
@@ -148,7 +145,6 @@ val chatVm: ChatViewModel = viewModel(
 |---|---|---|
 | `ChatViewModel` | 消息、流式文本、工具状态、搜索来源、待发送附件 | send / stop / clear / attach |
 | `ScheduleViewModel` | 月份、选中日期、日程、待办、同步状态 | 选择日期、翻月/翻周、增删改、CalDAV 同步 |
-| `NotesViewModel` | 便签列表 | 新增、完成、删除 |
 | `SettingsViewModel` | 人设、模型配置、CalDAV 配置、搜索配置、提醒提前量、关于我 | 保存/测试/导入/删除 |
 
 所有状态用 `MutableStateFlow<UiState>` 暴露，UI 用 `collectAsState()` 订阅。耗时操作在 `Dispatchers.IO`，UI 更新切回 `Dispatchers.Main`。
@@ -163,7 +159,7 @@ val chatVm: ChatViewModel = viewModel(
 | `messages` | id, role, content, createdAt, meta | 聊天记录；meta 存附件/工具/搜索来源的 JSON |
 | `events` | id, uid, href, etag, calendarUrl, title, date, start, end, endDate, allDay, location, description, local | 日程；`local=0` 表示来自 CalDAV |
 | `tasks` | id, title, date, done | 每日待办 |
-| `stickies` | id, text, color, done | 便签 |
+| `stickies` | id, text, color, done | 历史表；0.6.2 起无 UI/工具，保留数据 |
 | `memories` | id, text, source | 长期记忆 |
 | `profiles` | id, label, value | 「关于我」长期资料 |
 
@@ -174,7 +170,7 @@ Repository 很薄，基本是对 `AppDb` 的封装；`ScheduleRepository` 额外
 ### 5.4 领域层
 
 - `PersonaPrompt.systemPrompt()`：把人设卡、长期记忆、关于我资料、当前时间拼成 system prompt。多张人设卡时，第一张为主，其余为补充。
-- `ToolRegistry`：定义 20 个 function-calling 工具，`execute()` 按名字分发到 repository 或网络客户端。工具异常会被捕获成 `ToolExecution` 失败结果，交给模型解释，不会让整个对话崩掉。
+- `ToolRegistry`：定义 18 个 function-calling 工具，`execute()` 按名字分发到 repository 或网络客户端。工具异常会被捕获成 `ToolExecution` 失败结果，交给模型解释，不会让整个对话崩掉。
 - `TimeUtils`：本地日期、时间、时区换算，统一用 `Asia/Shanghai` 作为默认时区。
 
 ### 5.5 网络层
@@ -298,7 +294,7 @@ Repository 很薄，基本是对 `AppDb` 的封装；`ScheduleRepository` 额外
 
 ---
 
-## 7. 工具清单（20 个）
+## 7. 工具清单（18 个）
 
 | 分组 | 工具 | 作用 |
 |---|---|---|
@@ -309,7 +305,6 @@ Repository 很薄，基本是对 `AppDb` 的封装；`ScheduleRepository` 额外
 | 日程 | `upload_event` | 把本地日程上传到 CalDAV |
 | 日程 | `sync_calendar` | 双向同步 |
 | 待办 | `create_task` / `list_tasks` / `update_task` | 新建、查询、完成/取消完成 |
-| 便签 | `create_sticky` / `list_stickies` | 新建、查询 |
 | 联网 | `web_search` | Bing / Tavily / Serper |
 | 联网 | `fetch_url` | 读取网页正文 |
 | 记忆 | `remember` / `recall` | 写入、检索长期记忆 |
@@ -337,8 +332,8 @@ Repository 很薄，基本是对 `AppDb` 的封装；`ScheduleRepository` 额外
 - **普通配置**：SharedPreferences 明文，但只包含 Base URL、模型名、时区、提醒提前量等非敏感项。
 - **网络**：`network_security_config.xml` 只对 `10.0.2.2`、`localhost`、`127.0.0.1` 放开明文，其他端点强制 HTTPS。
 - **无遥测**：应用不包含统计 SDK，不会主动上报任何数据；请求只发往用户自己配置的模型、日历和搜索端点。
-- **数据本地**：聊天、日程、待办、便签、记忆、资料都存在 `qingricheng.db`，卸载应用即删除。
-- **工具边界**：模型只能通过 `ToolRegistry` 暴露的 20 个工具操作数据，不能直接访问文件系统或任意网络地址。
+- **数据本地**：聊天、日程、待办、记忆、资料都存在 `qingricheng.db`，卸载应用即删除。
+- **工具边界**：模型只能通过 `ToolRegistry` 暴露的 18 个工具操作数据，不能直接访问文件系统或任意网络地址。
 
 ---
 
@@ -386,7 +381,7 @@ Repository 很薄，基本是对 `AppDb` 的封装；`ScheduleRepository` 额外
 - 图片需要支持视觉的模型端点。
 - 部分 CalDAV 服务器不接受对已有资源的 `PUT`，更新会退化为「新建 + 删除」。
 - minSdk 30：玻璃透镜需要 Android 13+；Android 12 只有模糊，Android 11 退化为半透明色块。
-- 没有分页：消息一次取最近 200 条，日程按日期范围查询，便签全量读取。
+- 没有分页：消息一次取最近 200 条，日程按日期范围查询，待办按日期读取。
 
 ---
 

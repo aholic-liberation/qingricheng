@@ -299,8 +299,6 @@ class ChatViewModel(private val container: AppContainer) : ViewModel() {
         "create_task" -> "正在记待办…"
         "list_tasks" -> "正在查待办…"
         "update_task" -> "正在更新待办…"
-        "create_sticky" -> "正在记便签…"
-        "list_stickies" -> "正在查便签…"
         "web_search" -> "正在联网搜索…"
         "fetch_url" -> "正在读取网页…"
         "remember", "recall" -> "正在整理记忆…"

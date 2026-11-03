@@ -1,13 +1,13 @@
 # 轻日程（QingRiCheng）
 
-一个纯 Android 的轻量陪伴 + 日程应用：聊天、日程、周视图、便签、CalDAV 同步和通知提醒，全部跑在本地。
+一个纯 Android 的轻量陪伴 + 日程应用：聊天、日程、周视图、待办、CalDAV 同步和通知提醒，全部跑在本地。
 
 - **Kotlin + Jetpack Compose**（Material 3，暖色纸感主题）
 - **纯原生**：没有 WebView、没有 Node、没有 proot、没有内嵌 Linux
-- **数据本地**：聊天、日程、便签存在本机 SQLite；API Key 和 CalDAV 密码用 Android Keystore AES/GCM 加密
+- **数据本地**：聊天、日程、待办存在本机 SQLite；API Key 和 CalDAV 密码用 Android Keystore AES/GCM 加密
 - **无遥测**：不收集、不上报，只有你配置的模型/日历/搜索端点会收到请求
 
-当前版本：`0.6.1`（versionCode 14，minSdk 30 / targetSdk 37）
+当前版本：`0.6.2`（versionCode 15，minSdk 30 / targetSdk 37）
 
 ## 功能
 
@@ -24,7 +24,7 @@
 
 - 日程：创建、查询、修改、删除、上传、同步
 - 日历：CalDAV 双向同步（拉取、创建、修改、删除）
-- 待办 / 便签：创建、查询
+- 待办：创建、查询、完成/取消完成
 - 长期资料：`list_profile` / `set_profile` / `delete_profile`，带 confidence 阈值
 - 联网：网页搜索、读取网页正文、配置 CalDAV 账号
 
@@ -44,9 +44,11 @@
 - 新建/修改事件复用同一张表单
 - 本地日程与远程日程用不同颜色的色条区分
 
-### 便签
+### 待办
 
-本地彩色便签，支持完成和删除。
+- 第四个 tab 显示当前选中日期的待办，与日程页共享日期
+- 支持添加、完成/取消完成、删除
+- 模型可以通过 `create_task` / `list_tasks` / `update_task` 创建、查询和勾选
 
 ### 提醒
 

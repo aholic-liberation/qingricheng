@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -281,15 +282,20 @@ private fun WeekHeader(
                     Box(
                         Modifier
                             .padding(top = 2.dp)
-                            .size(28.dp)
-                            .clip(RoundedCornerShape(9.dp))
+                            .size(34.dp)
+                            .clip(RoundedCornerShape(11.dp))
                             .background(if (isSelected) Ink else Color.Transparent)
-                            .then(if (isToday && !isSelected) Modifier.border(1.dp, Accent, RoundedCornerShape(9.dp)) else Modifier),
+                            .then(if (isToday && !isSelected) Modifier.border(1.dp, Accent, RoundedCornerShape(11.dp)) else Modifier),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             day.dayOfMonth.toString(),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                platformStyle = PlatformTextStyle(includeFontPadding = false)
+                            ),
                             fontSize = 14.sp,
+                            lineHeight = 14.sp,
+                            textAlign = TextAlign.Center,
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                             color = when {
                                 isSelected -> Color.White

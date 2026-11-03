@@ -64,15 +64,11 @@ fun ScheduleScreen(
     onToday: () -> Unit,
     onSync: () -> Unit,
     onCreateEvent: (String, String, String, String, Boolean, String, String) -> Unit,
-    onAddTask: (String) -> Unit,
-    onToggleTask: (TaskItem) -> Unit,
-    onDeleteTask: (TaskItem) -> Unit,
     onDeleteEvent: (EventItem) -> Unit,
     onClearError: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
     var showEventDialog by remember { mutableStateOf(false) }
-    var taskDraft by remember { mutableStateOf("") }
     var deleteEvent by remember { mutableStateOf<EventItem?>(null) }
     val today = LocalDate.now()
 
@@ -160,8 +156,7 @@ fun ScheduleScreen(
                 TextButton(onClick = { showEventDialog = true }) { Text("+ 日程", fontSize = 12.sp) }
             }
             val dayEvents = state.events.filter { it.date == TimeUtils.dateKey(state.selected) }
-            val dayTasks = state.selectedTasks
-            if (dayEvents.isEmpty() && dayTasks.isEmpty()) {
+            if (dayEvents.isEmpty()) {
                 Text(
                     "这一天还没有安排",
                     fontSize = 13.sp,
@@ -173,35 +168,7 @@ fun ScheduleScreen(
             dayEvents.forEach { event ->
                 EventRow(event = event, onDelete = { deleteEvent = event })
             }
-            dayTasks.forEach { task ->
-                TaskRow(task = task, onToggle = { onToggleTask(task) }, onDelete = { onDeleteTask(task) })
-            }
-            Row(
-                Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 24.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = taskDraft,
-                    onValueChange = { taskDraft = it },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("在${state.selected.monthValue}月${state.selected.dayOfMonth}日 留一件事…", fontSize = 12.sp, color = Muted) },
-                    singleLine = true,
-                    shape = RoundedCornerShape(14.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        if (taskDraft.isNotBlank()) {
-                            onAddTask(taskDraft)
-                            taskDraft = ""
-                        }
-                    },
-                    enabled = taskDraft.isNotBlank(),
-                    modifier = Modifier.size(46.dp),
-                    shape = CircleShape,
-                    contentPadding = PaddingValues(0.dp)
-                ) { Text("+", fontSize = 20.sp) }
-            }
+            Spacer(Modifier.height(24.dp))
         }
     }
 
@@ -337,26 +304,6 @@ private fun EventRow(event: EventItem, onDelete: () -> Unit) {
         }
         TextButton(onClick = onDelete, contentPadding = PaddingValues(0.dp), modifier = Modifier.size(30.dp)) {
             Text("×", fontSize = 17.sp, color = Muted)
-        }
-    }
-}
-
-@Composable
-private fun TaskRow(task: TaskItem, onToggle: () -> Unit, onDelete: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().padding(vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(checked = task.done, onCheckedChange = { onToggle() }, modifier = Modifier.size(36.dp))
-        Text(
-            task.title,
-            fontSize = 13.5.sp,
-            color = if (task.done) Muted else Ink,
-            textDecoration = if (task.done) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,
-            modifier = Modifier.weight(1f)
-        )
-        TextButton(onClick = onDelete, contentPadding = PaddingValues(0.dp), modifier = Modifier.size(30.dp)) {
-            Text("×", fontSize = 16.sp, color = Muted)
         }
     }
 }

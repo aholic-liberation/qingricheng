@@ -5,7 +5,6 @@ import com.qingricheng.app.data.AppDb
 import com.qingricheng.app.data.AttachmentStore
 import com.qingricheng.app.data.ChatRepository
 import com.qingricheng.app.data.MemoryRepository
-import com.qingricheng.app.data.NotesRepository
 import com.qingricheng.app.data.PersonaRepository
 import com.qingricheng.app.data.ProfileRepository
 import com.qingricheng.app.data.ScheduleRepository
@@ -25,7 +24,6 @@ class AppContainer(context: Context) {
     val personas = PersonaRepository(appContext, db, settings)
     val chat = ChatRepository(db)
     val schedule = ScheduleRepository(db, appContext)
-    val notes = NotesRepository(db)
     val profile = ProfileRepository(db)
     val attachments = AttachmentStore(appContext)
     val memory = MemoryRepository(db)

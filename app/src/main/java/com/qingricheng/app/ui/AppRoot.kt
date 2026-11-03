@@ -88,9 +88,8 @@ import com.qingricheng.app.ui.chat.ChatScreen
 import com.qingricheng.app.ui.chat.Composer
 import com.qingricheng.app.ui.chat.ChatViewModel
 import com.qingricheng.app.ui.glass.GlassSpec
-import com.qingricheng.app.ui.notes.NotesScreen
-import com.qingricheng.app.ui.notes.NotesViewModel
 import com.qingricheng.app.ui.schedule.ScheduleScreen
+import com.qingricheng.app.ui.schedule.TasksScreen
 import com.qingricheng.app.ui.schedule.ScheduleViewModel
 import com.qingricheng.app.ui.schedule.WeekScreen
 import com.qingricheng.app.ui.settings.SettingsScreen
@@ -108,7 +107,7 @@ private val TABS = listOf(
     Tab("聊", "对话"),
     Tab("日", "日程"),
     Tab("周", "周视图"),
-    Tab("贴", "便签"),
+    Tab("办", "待办"),
     Tab("设", "设置")
 )
 
@@ -127,17 +126,12 @@ fun AppRoot(container: AppContainer) {
         key = "schedule",
         factory = viewModelFactory { initializer { ScheduleViewModel(container) } }
     )
-    val notesVm: NotesViewModel = viewModel(
-        key = "notes",
-        factory = viewModelFactory { initializer { NotesViewModel(container) } }
-    )
     val settingsVm: SettingsViewModel = viewModel(
         key = "settings",
         factory = viewModelFactory { initializer { SettingsViewModel(container) } }
     )
     val chatState by chatVm.state.collectAsState()
     val scheduleState by scheduleVm.state.collectAsState()
-    val notesState by notesVm.state.collectAsState()
     val settingsState by settingsVm.state.collectAsState()
     val imeVisible = WindowInsets.isImeVisible
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -152,7 +146,7 @@ fun AppRoot(container: AppContainer) {
             0 -> chatVm.refresh()
             1 -> scheduleVm.reload()
             2 -> scheduleVm.reload()
-            3 -> notesVm.reload()
+            3 -> scheduleVm.reload()
             4 -> settingsVm.reload()
         }
     }
@@ -186,9 +180,6 @@ fun AppRoot(container: AppContainer) {
                                 onToday = scheduleVm::goToday,
                                 onSync = scheduleVm::sync,
                                 onCreateEvent = scheduleVm::createEvent,
-                                onAddTask = scheduleVm::addTask,
-                                onToggleTask = scheduleVm::toggleTask,
-                                onDeleteTask = scheduleVm::deleteTask,
                                 onDeleteEvent = scheduleVm::deleteEvent,
                                 onClearError = scheduleVm::clearError,
                                 onOpenSettings = { tab = 4 }
@@ -209,11 +200,12 @@ fun AppRoot(container: AppContainer) {
                             )
                         }
                         3 -> Box(Modifier.fillMaxSize().padding(bottom = GlassSpec.ContentBottomPadding)) {
-                            NotesScreen(
-                                state = notesState,
-                                onAdd = notesVm::add,
-                                onToggle = notesVm::toggle,
-                                onDelete = notesVm::delete
+                            TasksScreen(
+                                state = scheduleState,
+                                onAddTask = scheduleVm::addTask,
+                                onToggleTask = scheduleVm::toggleTask,
+                                onDeleteTask = scheduleVm::deleteTask,
+                                onGoToday = scheduleVm::goToday
                             )
                         }
                         else -> Box(Modifier.fillMaxSize().padding(bottom = GlassSpec.ContentBottomPadding)) {
